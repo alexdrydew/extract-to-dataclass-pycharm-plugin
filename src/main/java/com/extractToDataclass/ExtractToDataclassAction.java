@@ -43,28 +43,50 @@ public class ExtractToDataclassAction extends AnAction {
 
             importDataclassIfNeeded(targetFile, function);
 
-            PyClass clazz = createDataclass(function, parametersIndicesToExtract);
+            PyClass clazz = createDataclass(targetFile, function, parametersIndicesToExtract);
             WriteCommandAction.runWriteCommandAction(
                     function.getProject(),
                     "Create class",
                     null,
                     () -> targetFile.addBefore(clazz, function));
+            removeParameters(function, parametersIndicesToExtract);
             WriteCommandAction.runWriteCommandAction(
                     function.getProject(),
                     "Create parameter",
                     null,
                     () -> params.addParameter(PyElementGenerator.getInstance(function.getProject()).createParameter(
-                            "params", null, dataclassName, LanguageLevel.getDefault()
+                            generateParamName(params, "params"), null, clazz.getName(), LanguageLevel.getDefault()
                     ))
             );
-            removeParameters(function, parametersIndicesToExtract);
         }
     }
 
-    private PyClass createDataclass(PyFunction function, List<Integer> parametersIndicesToExtract) {
+    private static String generateParamName(PyParameterList parameters, String baseName) {
+        String name = baseName;
+        int index = 1;
+        while (parameters.findParameterByName(name) != null) {
+            name = "%s%s".formatted(baseName, index);
+            index++;
+        }
+        return name;
+    }
+
+    private static String generateDataclassName(String functionName) {
+        return "%sParams".formatted(CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, functionName));
+    }
+
+    private static String generateDataclassName(String functionName, int index) {
+        return "%sParams%s".formatted(CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, functionName), index);
+    }
+
+    private PyClass createDataclass(PyFile file, PyFunction function, List<Integer> parametersIndicesToExtract) {
         PyParameterList params = function.getParameterList();
-        String dataclassName = "%sParams".formatted(
-                CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, function.getName()));
+        int freeIndex = 1;
+        String dataclassName = generateDataclassName(function.getName());
+        while (file.findTopLevelClass(dataclassName) != null) {
+            dataclassName = generateDataclassName(function.getName(), freeIndex);
+            freeIndex++;
+        }
         String dataclassSource = buildParamsDataclassSource(params.getParameters(), dataclassName, parametersIndicesToExtract);
         return PyElementGenerator.getInstance(function.getProject()).createFromText(
                 LanguageLevel.getDefault(), PyClass.class, dataclassSource.toString());
