@@ -1,0 +1,18 @@
+<idea-plugin>
+    <id>com.extractToDataclass</id>
+    <name>ExtractToDataclass</name>
+    <version>1.0</version>
+    <vendor email="alexdrydew@gmail.com">alexdrydew</vendor>
+    <description>A plugin to extract function arguments to a dataclass</description>
+
+
+    <depends>com.intellij.modules.python</depends>
+
+    <actions>
+        <action id="com.extractToDataclass.ExtractToDataclassAction"
+                class="com.extractToDataclass.ExtractToDataclassAction" text="Extract arguments to dataclass"
+                description="Extract arguments to dataclass">
+            <add-to-group group-id="RefactoringMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>
