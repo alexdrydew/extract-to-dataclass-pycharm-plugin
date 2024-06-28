@@ -7,8 +7,6 @@ import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.python.psi.*;
-import com.jetbrains.python.psi.impl.PyPsiUtils;
-import com.jetbrains.python.psi.resolve.RatedResolveResult;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -41,27 +39,11 @@ public class ExtractToDataclassAction extends AnAction {
                 throw new IllegalStateException("parametersIndicesToExtract is null");
             }
 
-            String dataclassName = "%sParams".formatted(
-                    CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, function.getName()));
-            String dataclassSource = buildParamsDataclassSource(params.getParameters(), dataclassName, parametersIndicesToExtract);
-            PyClass clazz = PyElementGenerator.getInstance(function.getProject()).createFromText(
-                    LanguageLevel.getDefault(), PyClass.class, dataclassSource.toString()
-            );
-
             PyFile targetFile = (PyFile) function.getContainingFile();
 
-            if (!isDataclassImported(targetFile)) {
-                PyFromImportStatement importDataclass = PyElementGenerator.getInstance(function.getProject()).createFromImportStatement(
-                        LanguageLevel.getDefault(),
-                        "dataclasses",
-                        DATACLASS_IDENTIFIER,
-                        null);
-                WriteCommandAction.runWriteCommandAction(
-                        function.getProject(),
-                        "Add dataclass import",
-                        null,
-                        () -> targetFile.addBefore(importDataclass, targetFile.getFirstChild()));
-            }
+            importDataclassIfNeeded(targetFile, function);
+
+            PyClass clazz = createDataclass(function, parametersIndicesToExtract);
             WriteCommandAction.runWriteCommandAction(
                     function.getProject(),
                     "Create class",
@@ -76,6 +58,30 @@ public class ExtractToDataclassAction extends AnAction {
                     ))
             );
             removeParameters(function, parametersIndicesToExtract);
+        }
+    }
+
+    private PyClass createDataclass(PyFunction function, List<Integer> parametersIndicesToExtract) {
+        PyParameterList params = function.getParameterList();
+        String dataclassName = "%sParams".formatted(
+                CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, function.getName()));
+        String dataclassSource = buildParamsDataclassSource(params.getParameters(), dataclassName, parametersIndicesToExtract);
+        return PyElementGenerator.getInstance(function.getProject()).createFromText(
+                LanguageLevel.getDefault(), PyClass.class, dataclassSource.toString());
+    }
+
+    private static void importDataclassIfNeeded(PyFile targetFile, PyFunction function) {
+        if (!isDataclassImported(targetFile)) {
+            PyFromImportStatement importDataclass = PyElementGenerator.getInstance(function.getProject()).createFromImportStatement(
+                    LanguageLevel.getDefault(),
+                    "dataclasses",
+                    DATACLASS_IDENTIFIER,
+                    null);
+            WriteCommandAction.runWriteCommandAction(
+                    function.getProject(),
+                    "Add dataclass import",
+                    null,
+                    () -> targetFile.addBefore(importDataclass, targetFile.getFirstChild()));
         }
     }
 
