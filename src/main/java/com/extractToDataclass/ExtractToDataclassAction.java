@@ -34,7 +34,8 @@ public class ExtractToDataclassAction extends AnAction {
                 return;
             }
 
-            ExtractToDataclassDialogWrapper dialog = new ExtractToDataclassDialogWrapper(Arrays.stream(function.getParameterList().getParameters()).map(PyParameter::getName).toArray(String[]::new));
+            ExtractToDataclassDialogWrapper dialog =
+                    new ExtractToDataclassDialogWrapper(Arrays.stream(function.getParameterList().getParameters()).map(PyParameter::getName).toArray(String[]::new));
             boolean isOk = dialog.showAndGet();
             if (!isOk) {
                 return;
@@ -49,9 +50,11 @@ public class ExtractToDataclassAction extends AnAction {
             importDataclassIfNeeded(targetFile);
 
             PyClass clazz = createDataclass(targetFile, function, parametersIndicesToExtract);
-            WriteCommandAction.runWriteCommandAction(function.getProject(), "Create class", null, () -> targetFile.addBefore(clazz, function));
+            WriteCommandAction.runWriteCommandAction(function.getProject(), "Create class", null,
+                    () -> targetFile.addBefore(clazz, function));
             String paramName = generateParamName(params, PARAMETER_NAME);
-            WriteCommandAction.runWriteCommandAction(function.getProject(), "Create parameter", null, () -> params.addParameter(PyElementGenerator.getInstance(function.getProject()).createParameter(paramName, null, clazz.getName(), LanguageLevel.getDefault())));
+            WriteCommandAction.runWriteCommandAction(function.getProject(), "Create parameter", null,
+                    () -> params.addParameter(PyElementGenerator.getInstance(function.getProject()).createParameter(paramName, null, clazz.getName(), LanguageLevel.getDefault())));
             removeParameters(function, clazz.getName(), paramName, parametersIndicesToExtract);
         }
     }
@@ -71,7 +74,8 @@ public class ExtractToDataclassAction extends AnAction {
     }
 
     private static String generateDataclassName(String functionName, int index) {
-        return "%s%s%s".formatted(CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, functionName), CLASSNAME_SUFFIX, index);
+        return "%s%s%s".formatted(CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, functionName),
+                CLASSNAME_SUFFIX, index);
     }
 
     private PyClass createDataclass(PyFile file, PyFunction function, List<Integer> parametersIndicesToExtract) {
@@ -82,15 +86,20 @@ public class ExtractToDataclassAction extends AnAction {
             dataclassName = generateDataclassName(function.getName(), freeIndex);
             freeIndex++;
         }
-        String dataclassSource = buildParamsDataclassSource(params.getParameters(), dataclassName, parametersIndicesToExtract);
-        return PyElementGenerator.getInstance(function.getProject()).createFromText(LanguageLevel.getDefault(), PyClass.class, dataclassSource.toString());
+        String dataclassSource = buildParamsDataclassSource(params.getParameters(), dataclassName,
+                parametersIndicesToExtract);
+        return PyElementGenerator.getInstance(function.getProject()).createFromText(LanguageLevel.getDefault(),
+                PyClass.class, dataclassSource.toString());
     }
 
     private static void importDataclassIfNeeded(PyFile targetFile) {
         Project project = targetFile.getProject();
         if (!isDataclassImported(targetFile)) {
-            PyFromImportStatement importDataclass = PyElementGenerator.getInstance(project).createFromImportStatement(LanguageLevel.getDefault(), "dataclasses", DATACLASS_IDENTIFIER, null);
-            WriteCommandAction.runWriteCommandAction(project, "Add dataclass import", null, () -> targetFile.addBefore(importDataclass, targetFile.getFirstChild()));
+            PyFromImportStatement importDataclass =
+                    PyElementGenerator.getInstance(project).createFromImportStatement(LanguageLevel.getDefault(),
+                            "dataclasses", DATACLASS_IDENTIFIER, null);
+            WriteCommandAction.runWriteCommandAction(project, "Add dataclass import", null,
+                    () -> targetFile.addBefore(importDataclass, targetFile.getFirstChild()));
         }
     }
 
@@ -106,7 +115,8 @@ public class ExtractToDataclassAction extends AnAction {
         return false;
     }
 
-    private static @NotNull String buildParamsDataclassSource(PyParameter[] params, String dataclassName, List<Integer> parametersIndicesToExtract) {
+    private static @NotNull String buildParamsDataclassSource(PyParameter[] params, String dataclassName,
+                                                              List<Integer> parametersIndicesToExtract) {
         StringBuilder paramsDataclassStringBuilder = new StringBuilder();
         paramsDataclassStringBuilder.append("@dataclass\n");
         paramsDataclassStringBuilder.append("class %s:\n".formatted(dataclassName));
@@ -125,7 +135,8 @@ public class ExtractToDataclassAction extends AnAction {
         return paramsDataclassStringBuilder.toString();
     }
 
-    private void removeParameters(PyFunction function, String dataclassClassName, String dataclassParameterName, Vector<Integer> parametersIndicesToRemove) {
+    private void removeParameters(PyFunction function, String dataclassClassName, String dataclassParameterName,
+                                  Vector<Integer> parametersIndicesToRemove) {
         PyElementGenerator pyElementGenerator = PyElementGenerator.getInstance(function.getProject());
         updateLocalParametersUsage(function, dataclassParameterName, parametersIndicesToRemove);
 
@@ -135,9 +146,11 @@ public class ExtractToDataclassAction extends AnAction {
             parametersToRemoveNames.add(params[index].getName());
         }
 
-        Query<PyCallExpression> callsQuery = ReferencesSearch.search(function, function.getUseScope()).filtering(reference -> reference instanceof PsiReference).mapping(reference -> reference.getElement().getParent()).filtering(element -> element instanceof PyCallExpression).mapping(element -> (PyCallExpression) element);
+        Query<PyCallExpression> callsQuery =
+                ReferencesSearch.search(function, function.getUseScope()).filtering(reference -> reference instanceof PsiReference).mapping(reference -> reference.getElement().getParent()).filtering(element -> element instanceof PyCallExpression).mapping(element -> (PyCallExpression) element);
         for (PyCallExpression call : callsQuery.findAll()) {
-            List<PyCallExpression.PyArgumentsMapping> argumentsMappings = call.multiMapArguments(PyResolveContext.defaultContext(TypeEvalContext.userInitiated(function.getProject(), function.getContainingFile())));
+            List<PyCallExpression.PyArgumentsMapping> argumentsMappings =
+                    call.multiMapArguments(PyResolveContext.defaultContext(TypeEvalContext.userInitiated(function.getProject(), function.getContainingFile())));
             // TODO: handle overloaded functions?
             Vector<PyExpression> deletedArguments = new Vector<>();
             if (argumentsMappings.size() == 1) {
@@ -145,20 +158,23 @@ public class ExtractToDataclassAction extends AnAction {
                 for (Map.Entry<PyExpression, PyCallableParameter> entry : mapping.getMappedParameters().entrySet()) {
                     String argumentName = entry.getValue().getName();
                     if (parametersToRemoveNames.contains(argumentName)) {
-                        WriteCommandAction.runWriteCommandAction(function.getProject(), "Remove Extracted Parameter", null, () -> {
+                        WriteCommandAction.runWriteCommandAction(function.getProject(), "Remove Extracted Parameter",
+                                null, () -> {
                             entry.getKey().delete();
                         });
                         deletedArguments.add(entry.getKey());
                     }
                 }
 
-                PyCallExpression dataclassCall = pyElementGenerator.createCallExpression(LanguageLevel.getDefault(), dataclassClassName);
+                PyCallExpression dataclassCall = pyElementGenerator.createCallExpression(LanguageLevel.getDefault(),
+                        dataclassClassName);
                 PyArgumentList dataclassCallArguments = dataclassCall.getArgumentList();
                 for (PyExpression deletedArgument : deletedArguments) {
                     dataclassCallArguments.addArgumentFirst(deletedArgument);
                 }
 
-                WriteCommandAction.runWriteCommandAction(function.getProject(), "Add Dataclass Call", null, () -> call.getArgumentList().addArgument(pyElementGenerator.createKeywordArgument(LanguageLevel.getDefault(), dataclassParameterName, dataclassCall.getText())));
+                WriteCommandAction.runWriteCommandAction(function.getProject(), "Add Dataclass Call", null,
+                        () -> call.getArgumentList().addArgument(pyElementGenerator.createKeywordArgument(LanguageLevel.getDefault(), dataclassParameterName, dataclassCall.getText())));
             }
         }
 
@@ -170,17 +186,21 @@ public class ExtractToDataclassAction extends AnAction {
         });
     }
 
-    private static void updateLocalParametersUsage(PyFunction function, String dataclassParameterName, Vector<Integer> parametersIndicesToRemove) {
+    private static void updateLocalParametersUsage(PyFunction function, String dataclassParameterName,
+                                                   Vector<Integer> parametersIndicesToRemove) {
         PyElementGenerator pyElementGenerator = PyElementGenerator.getInstance(function.getProject());
         PyParameter[] params = function.getParameterList().getParameters();
         for (Integer index : parametersIndicesToRemove) {
             PyParameter param = params[index];
-            Query<PyReferenceExpression> query = ReferencesSearch.search(param, new LocalSearchScope(function)).mapping(reference -> reference.getElement()).filtering(element -> element instanceof PyReferenceExpression).mapping(element -> (PyReferenceExpression) element);
+            Query<PyReferenceExpression> query =
+                    ReferencesSearch.search(param, new LocalSearchScope(function)).mapping(reference -> reference.getElement()).filtering(element -> element instanceof PyReferenceExpression).mapping(element -> (PyReferenceExpression) element);
 
             for (PyReferenceExpression reference : query.findAll()) {
                 String newReferenceSource = "%s.%s".formatted(dataclassParameterName, reference.getName());
-                PyExpression newReference = pyElementGenerator.createExpressionFromText(LanguageLevel.getDefault(), newReferenceSource);
-                WriteCommandAction.runWriteCommandAction(function.getProject(), "Update Extracted Parameter Usage", null, () -> reference.replace(newReference));
+                PyExpression newReference = pyElementGenerator.createExpressionFromText(LanguageLevel.getDefault(),
+                        newReferenceSource);
+                WriteCommandAction.runWriteCommandAction(function.getProject(), "Update Extracted Parameter Usage",
+                        null, () -> reference.replace(newReference));
             }
         }
     }
