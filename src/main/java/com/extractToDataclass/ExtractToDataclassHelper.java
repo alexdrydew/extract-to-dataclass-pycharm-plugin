@@ -188,10 +188,11 @@ public class ExtractToDataclassHelper {
             Set<String> assignedParameterNames =
                     referencingElements.stream().filter(element -> element instanceof PyTargetExpression).map(element -> ((PyTargetExpression) element).getName()).collect(Collectors.toSet());
 
-            statementsList.addBefore(pyElementGenerator.createFromText(LanguageLevel.getDefault(),
-                    PyAssignmentStatement.class,
-                    "%s = %s.%s".formatted(paramName, dataclassParameterName, paramName)),
-                    statementsList.getFirstChild());
+            if (!assignedParameterNames.isEmpty()) {
+                statementsList.addBefore(pyElementGenerator.createFromText(LanguageLevel.getDefault(),
+                        PyAssignmentStatement.class, "%s = %s.%s".formatted(paramName, dataclassParameterName,
+                                paramName)), statementsList.getFirstChild());
+            }
 
             for (PsiElement referencingElement : referencingElements) {
                 if (assignedParameterNames.contains(paramName)) continue;
