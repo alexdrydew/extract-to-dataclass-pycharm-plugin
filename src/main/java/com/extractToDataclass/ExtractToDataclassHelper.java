@@ -178,7 +178,6 @@ public class ExtractToDataclassHelper {
         PyParameter[] params = function.getParameterList().getParameters();
         PyStatementList statementsList = function.getStatementList();
         for (Integer index : parametersIndicesToRemove) {
-            // TODO: handle assignments
             PyParameter param = params[index];
             String paramName = param.getName();
 

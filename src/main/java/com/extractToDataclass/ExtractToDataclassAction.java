@@ -12,9 +12,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 public class ExtractToDataclassAction extends AnAction {
-    private static final String PARAMETER_NAME = "params";
-    private static final String DATACLASS_NAME_SUFFIX = "Params";
-
     @Override
     public void actionPerformed(AnActionEvent event) {
         PyFunction function = getTargetFunction(event);
@@ -35,9 +32,17 @@ public class ExtractToDataclassAction extends AnAction {
             if (parametersIndicesToExtract == null) {
                 throw new IllegalStateException("parametersIndicesToExtract is null");
             }
+            String parameterName = dialog.getParameterName();
+            if (parameterName == null) {
+                throw new IllegalStateException("parameterName is null");
+            }
+            String className = dialog.getClassName();
+            if (className == null) {
+                throw new IllegalStateException("className is null");
+            }
 
             PyFile targetFile = (PyFile) function.getContainingFile();
-            ExtractToDataclassHelper helper = new ExtractToDataclassHelper(PARAMETER_NAME, DATACLASS_NAME_SUFFIX);
+            ExtractToDataclassHelper helper = new ExtractToDataclassHelper(parameterName, className);
             WriteCommandAction.runWriteCommandAction(function.getProject(), "Extract Parameters To Dataclass", null,
                     () -> helper.extractParametersToDataclass(targetFile, function, parametersIndicesToExtract));
         }
