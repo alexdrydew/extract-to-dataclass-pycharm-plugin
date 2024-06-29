@@ -16,6 +16,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
+// TODO: handle typevars in signature
 public class ExtractToDataclassHelper {
     String parameterName;
     String dataclassNameSuffix;
