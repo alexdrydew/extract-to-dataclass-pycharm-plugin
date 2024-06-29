@@ -2,6 +2,7 @@ package com.extractToDataclass;
 
 import com.google.common.base.CaseFormat;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
@@ -12,10 +13,8 @@ import com.jetbrains.python.psi.types.PyCallableParameter;
 import com.jetbrains.python.psi.types.TypeEvalContext;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ExtractToDataclassHelper {
     String parameterName;
@@ -177,17 +176,32 @@ public class ExtractToDataclassHelper {
                                                    @NotNull List<Integer> parametersIndicesToRemove) {
         PyElementGenerator pyElementGenerator = PyElementGenerator.getInstance(function.getProject());
         PyParameter[] params = function.getParameterList().getParameters();
+        PyStatementList statementsList = function.getStatementList();
         for (Integer index : parametersIndicesToRemove) {
             // TODO: handle assignments
             PyParameter param = params[index];
-            Query<PyReferenceExpression> query =
-                    ReferencesSearch.search(param, new LocalSearchScope(function)).mapping(reference -> reference.getElement()).filtering(element -> element instanceof PyReferenceExpression).mapping(element -> (PyReferenceExpression) element);
+            String paramName = param.getName();
 
-            for (PyReferenceExpression reference : query.findAll()) {
-                String newReferenceSource = "%s.%s".formatted(dataclassParameterName, reference.getName());
-                PyExpression newReference = pyElementGenerator.createExpressionFromText(LanguageLevel.getDefault(),
-                        newReferenceSource);
-                reference.replace(newReference);
+            Collection<PsiElement> referencingElements = ReferencesSearch.search(param,
+                    new LocalSearchScope(function)).mapping(reference -> reference.getElement()).findAll();
+
+            Set<String> assignedParameterNames =
+                    referencingElements.stream().filter(element -> element instanceof PyTargetExpression).map(element -> ((PyTargetExpression) element).getName()).collect(Collectors.toSet());
+
+            statementsList.addBefore(pyElementGenerator.createFromText(LanguageLevel.getDefault(),
+                    PyAssignmentStatement.class,
+                    "%s = %s.%s".formatted(paramName, dataclassParameterName, paramName)),
+                    statementsList.getFirstChild());
+
+            for (PsiElement referencingElement : referencingElements) {
+                if (assignedParameterNames.contains(paramName)) continue;
+                if (referencingElement instanceof PyReferenceExpression) {
+                    PyReferenceExpression reference = (PyReferenceExpression) referencingElement;
+                    String newReferenceSource = "%s.%s".formatted(dataclassParameterName, reference.getName());
+                    PyExpression newReference =
+                            pyElementGenerator.createExpressionFromText(LanguageLevel.getDefault(), newReferenceSource);
+                    reference.replace(newReference);
+                }
             }
         }
     }
