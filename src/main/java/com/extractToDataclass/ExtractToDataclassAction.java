@@ -32,7 +32,7 @@ public class ExtractToDataclassAction extends AnAction {
                 return;
             }
             ExtractToDataclassActionData actionData = askForActionData(function);
-            if (actionData == null || !actionData.isOk()) {
+            if (actionData == null || !actionData.isOk() || actionData.selectedParameterIndices().isEmpty()) {
                 return;
             }
 

@@ -9,6 +9,7 @@ class TargetFunctionMyParams:
 
 def target_function(
         my_params: TargetFunctionMyParams):
+    arg = 10
     return my_params.arg1 + my_params.arg2
 
 

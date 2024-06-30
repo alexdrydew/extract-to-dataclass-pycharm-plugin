@@ -2,16 +2,16 @@ from dataclasses import dataclass
 
 
 @dataclass
-class TargetFunctionParams:
+class TargetFunctionMyParams:
     arg2: str
 
 
 def target_function(
         arg1: int,
-        params: TargetFunctionParams):
-    return arg1 + params.arg2
+        my_params: TargetFunctionMyParams):
+    return arg1 + my_params.arg2
 
 
 target_function(
-    arg1=1, params=TargetFunctionParams(arg2='2')
+    arg1=1, my_params=TargetFunctionMyParams(arg2='2')
 )
