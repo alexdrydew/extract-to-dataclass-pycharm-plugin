@@ -12,13 +12,23 @@ repositories {
 
 intellij {
     version.set("2024.1.3")
-    type.set("PC") // Target IDE Platform
-
+    type.set("PC")
     plugins.set(listOf("PythonCore"))
 }
 
+sourceSets {
+    main {}
+    test {
+        java.srcDir("testSrc")
+        resources.srcDir("testData")
+    }
+}
+
+dependencies {
+    testImplementation("junit:junit:4.13")
+}
+
 tasks {
-    // Set the JVM compatibility versions
     withType<JavaCompile> {
         sourceCompatibility = "17"
         targetCompatibility = "17"
@@ -37,5 +47,9 @@ tasks {
 
     publishPlugin {
         token.set(System.getenv("PUBLISH_TOKEN"))
+    }
+
+    test {
+        useJUnit()
     }
 }
