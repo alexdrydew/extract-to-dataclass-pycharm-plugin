@@ -89,7 +89,7 @@ public class ExtractToDataclassHelper {
                 dataclassNameSuffix);
     }
 
-    private @NotNull String generateDataclassName(String functionName, int index) {
+    private @NotNull String generateDataclassName(@NotNull String functionName, int index) {
         return "%s%s%s".formatted(CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, functionName),
                 dataclassNameSuffix, index);
     }
@@ -181,7 +181,7 @@ public class ExtractToDataclassHelper {
     }
 
     private static @Nullable PyElementFromImportSource findClassFromImportSource(@NotNull PyFile targetFile,
-                                                                                 String topLevelClassName) {
+                                                                                 @NotNull String topLevelClassName) {
         PyClass clazz = targetFile.findTopLevelClass(topLevelClassName);
         if (clazz == null) {
             return null;
@@ -210,9 +210,9 @@ public class ExtractToDataclassHelper {
         }
     }
 
-    private static void updateFunctionCall(PyCallExpression call, @NotNull String dataclassClassName,
+    private static void updateFunctionCall(@NotNull PyCallExpression call, @NotNull String dataclassClassName,
                                            @NotNull String dataclassParameterName,
-                                           HashSet<String> parametersToRemoveNames) {
+                                           @NotNull HashSet<String> parametersToRemoveNames) {
         PyFunction targetFunction = getCalledFunction(call);
         PyFile targetFunctionFile = (PyFile) targetFunction.getContainingFile();
         List<PyCallExpression.PyArgumentsMapping> argumentsMappings =
@@ -235,12 +235,12 @@ public class ExtractToDataclassHelper {
         }
     }
 
-    private static PyFunction getCalledFunction(PyCallExpression call) {
+    private static PyFunction getCalledFunction(@NotNull PyCallExpression call) {
         return (PyFunction) (((PyReferenceExpression) call.getCallee()).getReference().resolve());
     }
 
-    private static Vector<PyExpression> deleteArgumentsUsingMapping(HashSet<String> parametersToRemoveNames,
-                                                                    PyCallExpression.PyArgumentsMapping argumentsMapping) {
+    private static Vector<PyExpression> deleteArgumentsUsingMapping(@NotNull HashSet<String> parametersToRemoveNames,
+                                                                    @NotNull PyCallExpression.PyArgumentsMapping argumentsMapping) {
         Vector<PyExpression> deletedArguments = new Vector<>();
         for (Map.Entry<PyExpression, PyCallableParameter> entry : argumentsMapping.getMappedParameters().entrySet()) {
             String argumentName = entry.getValue().getName();
@@ -317,9 +317,10 @@ public class ExtractToDataclassHelper {
         }
     }
 
-    private static void assignParameterToDataclassParameterAttribute(PyFunction function,
+    private static void assignParameterToDataclassParameterAttribute(@NotNull PyFunction function,
                                                                      @NotNull String dataclassParameterName,
-                                                                     String paramName, String attributeName) {
+                                                                     @NotNull String paramName,
+                                                                     @NotNull String attributeName) {
         PyStatementList statementsList = function.getStatementList();
         PyElementGenerator pyElementGenerator = PyElementGenerator.getInstance(function.getProject());
 
