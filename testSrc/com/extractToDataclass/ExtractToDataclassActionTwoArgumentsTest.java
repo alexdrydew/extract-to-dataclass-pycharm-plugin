@@ -3,7 +3,7 @@ package com.extractToDataclass;
 import java.util.List;
 
 
-public class ExtractToDataclassActionTwoArgumentsTest extends BaseExtractToDataclassTestCase {
+public class ExtractToDataclassActionTwoArgumentsTest extends SingleFileExtractToDataclassTestCase {
 
     public void testExtractTwoArgumentsToDataclass() {
         ExtractToDataclassAction.testActionData = new ExtractToDataclassActionData(true, List.of(0, 1), "my_params",

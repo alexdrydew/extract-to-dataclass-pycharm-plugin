@@ -2,7 +2,7 @@ package com.extractToDataclass;
 
 import java.util.List;
 
-public class ExtractToDataclassActionMutableParameterTest extends BaseExtractToDataclassTestCase {
+public class ExtractToDataclassActionMutableParameterTest extends SingleFileExtractToDataclassTestCase {
 
     public void testExtractToDataclassWithFirstParameterAssignedInsideFunction() {
         ExtractToDataclassAction.testActionData = new ExtractToDataclassActionData(true, List.of(0, 1), "my_params",

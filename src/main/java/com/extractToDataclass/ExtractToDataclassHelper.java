@@ -87,16 +87,22 @@ public class ExtractToDataclassHelper {
         }
     }
 
-    private static boolean isDataclassImported(@NotNull PyFile targetFile) {
+    private static boolean hasFromImport(@NotNull PyFile targetFile, @NotNull String importSource,
+                                         @NotNull String importElementName) {
         for (PyFromImportStatement fromImport : targetFile.getFromImports()) {
-            if (!fromImport.getImportSource().asQualifiedName().toString().equals("dataclasses")) continue;
+            if (!fromImport.getImportSource().asQualifiedName().toString().equals(importSource)) continue;
             for (PyImportElement importElement : fromImport.getImportElements()) {
-                if (importElement.getVisibleName().equals(DATACLASS_IDENTIFIER)) {
+                if (importElement.getVisibleName().equals(importElementName)) {
                     return true;
                 }
             }
         }
         return false;
+    }
+
+
+    private static boolean isDataclassImported(@NotNull PyFile targetFile) {
+        return hasFromImport(targetFile, "dataclasses", DATACLASS_IDENTIFIER);
     }
 
     private static @NotNull String buildParamsDataclassSource(@NotNull PyParameter[] params,
@@ -135,6 +141,8 @@ public class ExtractToDataclassHelper {
     private static void updateFunctionCalls(@NotNull PyFunction function, @NotNull String dataclassClassName,
                                             @NotNull String dataclassParameterName,
                                             @NotNull List<Integer> parametersIndicesToRemove) {
+        PyFile targetFunctionFile = (PyFile) function.getContainingFile();
+
         PyElementGenerator pyElementGenerator = PyElementGenerator.getInstance(function.getProject());
         PyParameter[] params = function.getParameterList().getParameters();
         HashSet<String> parametersToRemoveNames = new HashSet<>();
@@ -158,7 +166,22 @@ public class ExtractToDataclassHelper {
                     }
                 }
 
-                // TODO: handle function in other modules (need to import dataclass first)
+                PyFile callFile = (PyFile) call.getContainingFile();
+                if (!callFile.equals(targetFunctionFile)) {
+                    String classQualifiedName =
+                            targetFunctionFile.findTopLevelClass(dataclassClassName).getQualifiedName();
+                    int lastSeparatorIndex = classQualifiedName.lastIndexOf('.');
+                    String importSource = classQualifiedName.substring(0, lastSeparatorIndex);
+                    String className = classQualifiedName.substring(lastSeparatorIndex + 1);
+
+                    if (!hasFromImport(callFile, importSource, className)) {
+                        PyFromImportStatement dataclassImportElement =
+                                pyElementGenerator.createFromImportStatement(LanguageLevel.getDefault(), importSource
+                                        , className, null);
+                        callFile.addBefore(dataclassImportElement, callFile.getFirstChild());
+                    }
+                }
+
                 PyCallExpression dataclassCall = pyElementGenerator.createCallExpression(LanguageLevel.getDefault(),
                         dataclassClassName);
                 PyArgumentList dataclassCallArguments = dataclassCall.getArgumentList();

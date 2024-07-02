@@ -2,7 +2,7 @@ package com.extractToDataclass;
 
 import java.util.List;
 
-public class ExtractToDataclassActionAlreadyImportedTest extends BaseExtractToDataclassTestCase {
+public class ExtractToDataclassActionAlreadyImportedTest extends SingleFileExtractToDataclassTestCase {
 
     public void testExtractToDataclassWhenDataclassIsAlreadyImported() {
         ExtractToDataclassAction.testActionData = new ExtractToDataclassActionData(true, List.of(0, 1), "my_params",

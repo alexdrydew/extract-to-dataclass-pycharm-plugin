@@ -5,7 +5,7 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import org.jetbrains.annotations.NotNull;
 
 
-abstract public class BaseExtractToDataclassTestCase extends BasePlatformTestCase {
+abstract public class SingleFileExtractToDataclassTestCase extends BasePlatformTestCase {
     @Override
     protected @NotNull String getTestDataPath() {
         return "testData";
