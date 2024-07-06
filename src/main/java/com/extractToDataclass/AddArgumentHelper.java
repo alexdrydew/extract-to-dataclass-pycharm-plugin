@@ -3,7 +3,6 @@ package com.extractToDataclass;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Queues;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.jetbrains.python.NotNullPredicate;
 import com.jetbrains.python.psi.PyArgumentList;
 import com.jetbrains.python.psi.PyElementGenerator;
 import com.jetbrains.python.psi.PyExpression;
@@ -14,22 +13,15 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
-
+import java.util.function.Predicate;
 
 /**
  * Helper class to add arguments to a PyArgumentList (PyArgumentList.addArgument() is bugged)
  */
 public class AddArgumentHelper {
     private final PyArgumentList pyArgumentList;
-    private static final NoKeyArguments NO_KEY_ARGUMENTS = new NoKeyArguments();
-
-    private static class NoKeyArguments extends NotNullPredicate<PyExpression> {
-
-        @Override
-        protected boolean applyNotNull(@NotNull final PyExpression input) {
-            return (PsiTreeUtil.getParentOfType(input, PyKeywordArgument.class) == null) && !(input instanceof PyKeywordArgument);
-        }
-    }
+    private static final Predicate<PyExpression> NO_KEY_ARGUMENTS = input ->
+            (PsiTreeUtil.getParentOfType(input, PyKeywordArgument.class) == null) && !(input instanceof PyKeywordArgument);
 
     public AddArgumentHelper(@NotNull PyArgumentList pyArgumentList) {
         this.pyArgumentList = pyArgumentList;
@@ -46,9 +38,8 @@ public class AddArgumentHelper {
         if (childrenOfType == null) {
             return new ArrayDeque<>(0);
         }
-        return Queues.newArrayDeque(Collections2.filter(Arrays.stream(childrenOfType).filter(child -> child.getParent() == pyArgumentList).toList(), NO_KEY_ARGUMENTS));
+        return Queues.newArrayDeque(Collections2.filter(Arrays.stream(childrenOfType).filter(child -> child.getParent() == pyArgumentList).toList(), NO_KEY_ARGUMENTS::test));
     }
-
 
     public void addArgument(@NotNull final PyExpression arg) {
         final PyElementGenerator generator = new PyElementGeneratorImpl(pyArgumentList.getProject());
@@ -61,7 +52,6 @@ public class AddArgumentHelper {
             generator.insertItemIntoListRemoveRedundantCommas(pyArgumentList, null, arg);
             return;
         }
-
 
         if (arg instanceof PyKeywordArgument) {
             if (parameters.isEmpty()) {

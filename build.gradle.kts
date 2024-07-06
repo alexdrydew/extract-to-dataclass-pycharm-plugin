@@ -3,16 +3,16 @@ plugins {
     id("org.jetbrains.intellij") version "1.17.3"
 }
 
-group = "com.extractToDataclass"
-version = "1.0-SNAPSHOT"
+group = project.property("group") as String
+version = project.property("version") as String
 
 repositories {
     mavenCentral()
 }
 
 intellij {
-    version.set("2024.1.3")
-    type.set("PC")
+    version.set(project.property("intellijVersion") as String)
+    type.set(project.property("intellijType") as String)
     plugins.set(listOf("PythonCore"))
 }
 
@@ -25,19 +25,19 @@ sourceSets {
 }
 
 dependencies {
-    testImplementation("junit:junit:4.13")
+    testImplementation("junit:junit:4.13.1")
 }
 
 tasks {
     withType<JavaCompile> {
-        sourceCompatibility = "17"
-        targetCompatibility = "17"
+        sourceCompatibility = project.property("javaVersion") as String
+        targetCompatibility = project.property("javaVersion") as String
     }
 
-//    patchPluginXml {
-//        sinceBuild.set("232")
-//        untilBuild.set("242.*")
-//    }
+    patchPluginXml {
+        sinceBuild.set(project.property("pluginSinceBuild") as String)
+        untilBuild.set(project.property("pluginUntilBuild") as String)
+    }
 
     signPlugin {
         certificateChain.set(System.getenv("CERTIFICATE_CHAIN"))
