@@ -8,6 +8,7 @@ import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.util.Query;
 import com.jetbrains.python.psi.*;
+import com.jetbrains.python.psi.impl.PyTypeDeclarationStatementNavigator;
 import com.jetbrains.python.psi.resolve.PyResolveContext;
 import com.jetbrains.python.psi.types.PyCallableParameter;
 import com.jetbrains.python.psi.types.TypeEvalContext;
@@ -70,7 +71,15 @@ public class ExtractToDataclassHelper {
     }
 
     private static void addDataclassParameterToFunction(@NotNull PyFunction function, @NotNull PyParameterList params, @NotNull String paramName, @NotNull PyClass clazz) {
-        params.addParameter(PyElementGenerator.getInstance(function.getProject()).createParameter(paramName, null, clazz.getName(), LanguageLevel.getDefault()));
+        PyElementGenerator generator = PyElementGenerator.getInstance(function.getProject());
+        String annotationType = clazz.getName();
+        PyExpression[] superClasses = clazz.getSuperClassExpressions();
+        if (superClasses.length == 1 && superClasses[0] instanceof PySubscriptionExpression superClassSubscriptionExpr) {
+            String subscriptionSuffix = superClassSubscriptionExpr.getIndexExpression().getText();
+            annotationType = String.format("%s[%s]", annotationType, subscriptionSuffix);
+        }
+        PyNamedParameter parameter = generator.createParameter(paramName, null, annotationType, LanguageLevel.getDefault());
+        params.addParameter(parameter);
     }
 
     private static String generateUnusedParamName(@NotNull PyParameterList parameters, @NotNull String baseName) {

@@ -12,7 +12,7 @@ class TargetFunctionArgs(Generic[T]):
 
 
 def target_function(
-        my_params: TargetFunctionArgs):
+        my_params: TargetFunctionArgs[T]):
     return my_params.arg1 + my_params.arg2
 
 target_function(
