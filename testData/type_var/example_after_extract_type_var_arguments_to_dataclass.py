@@ -1,4 +1,5 @@
-from typing import TypeVar, Generic
+from typing import Generic
+from typing import TypeVar
 from dataclasses import dataclass
 
 T = TypeVar('T', bound=int)
@@ -8,6 +9,7 @@ T = TypeVar('T', bound=int)
 class TargetFunctionArgs(Generic[T]):
     arg1: T
     arg2: str
+
 
 def target_function(
         my_params: TargetFunctionArgs):
