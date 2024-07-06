@@ -36,6 +36,7 @@ public class ExtractToDataclassHelper {
         PyParameterList params = function.getParameterList();
 
         importDataclassDecoratorIfNeeded(targetFile);
+        importAnyIfNeeded(targetFile, function, parametersIndicesToExtract);
 
         PyClass clazz = createDataclass(targetFile, function, parametersIndicesToExtract);
         targetFile.addBefore(clazz, function);
@@ -47,6 +48,25 @@ public class ExtractToDataclassHelper {
         updateLocalParametersUsage(function, paramName, parametersIndicesToExtract);
         updateFunctionCalls(function, className, paramName, parametersIndicesToExtract);
         removeParameters(function, parametersIndicesToExtract);
+    }
+
+    private void importAnyIfNeeded(@NotNull PyFile targetFile, @NotNull PyFunction function, @NotNull List<Integer> parametersIndicesToExtract) {
+        if (isAnyNeeded(function, parametersIndicesToExtract) && !isAnyImported(targetFile)) {
+            PyElementGenerator generator = PyElementGenerator.getInstance(targetFile.getProject());
+            PyFromImportStatement importAny = generator.createFromImportStatement(LanguageLevel.getDefault(), "typing", "Any", null);
+            targetFile.addBefore(importAny, targetFile.getFirstChild());
+        }
+    }
+
+    private boolean isAnyNeeded(@NotNull PyFunction function, @NotNull List<Integer> parametersIndicesToExtract) {
+        PyParameterList params = function.getParameterList();
+        for (Integer index : parametersIndicesToExtract) {
+            PyNamedParameter namedParam = params.getParameters()[index].getAsNamed();
+            if (namedParam.getAnnotation() == null) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void addDataclassParameterToFunction(@NotNull PyFunction function, @NotNull PyParameterList params, @NotNull String paramName, @NotNull PyClass clazz) {
@@ -193,6 +213,10 @@ public class ExtractToDataclassHelper {
 
     private static boolean isDataclassImported(@NotNull PyFile targetFile) {
         return hasFromImport(targetFile, "dataclasses", DATACLASS_IDENTIFIER);
+    }
+
+    private static boolean isAnyImported(@NotNull PyFile targetFile) {
+        return hasFromImport(targetFile, "typing", "Any");
     }
 
     private void removeParameters(@NotNull PyFunction function, @NotNull List<Integer> parametersIndicesToRemove) {
