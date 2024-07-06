@@ -321,7 +321,10 @@ public class ExtractToDataclassHelper {
     }
 
     private static void updateLocalParametersUsage(@NotNull PyFunction function, @NotNull String dataclassParameterName, @NotNull List<Integer> parametersIndicesToRemove) {
-        for (Integer index : parametersIndicesToRemove) {
+        List<Integer> sortedIndices = new ArrayList<>(parametersIndicesToRemove);
+        // Sort in reverse order because assignments are inserted to the beginning of the function
+        sortedIndices.sort(Collections.reverseOrder());
+        for (Integer index : sortedIndices) {
             updateLocalParameterUsage(function, index, dataclassParameterName);
         }
     }
@@ -333,7 +336,10 @@ public class ExtractToDataclassHelper {
         String paramName = oldParam.getName();
         Collection<PsiElement> referencingElements = ReferencesSearch.search(oldParam, new LocalSearchScope(function)).mapping(reference -> reference.getElement()).findAll();
 
-        boolean hasParameterAssignments = referencingElements.stream().anyMatch(element -> element instanceof PyTargetExpression);
+        boolean hasParameterAssignments = referencingElements.stream().anyMatch(element ->
+                element instanceof PyTargetExpression ||
+                        (element instanceof PyReferenceExpression && element.getParent() instanceof PyAugAssignmentStatement)
+        );
 
         if (hasParameterAssignments) {
             assignParameterToDataclassParameterAttribute(function, dataclassParameterName, paramName, paramName);

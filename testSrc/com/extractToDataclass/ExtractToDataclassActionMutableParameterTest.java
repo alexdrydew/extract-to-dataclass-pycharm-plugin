@@ -5,7 +5,7 @@ import java.util.List;
 public class ExtractToDataclassActionMutableParameterTest extends SingleFileExtractToDataclassTestCase {
 
     public void testExtractToDataclassWithFirstParameterAssignedInsideFunction() {
-        ExtractToDataclassAction.testActionData = new ExtractToDataclassActionData(true, List.of(0, 1), "my_params",
+        ExtractToDataclassAction.testActionData = new ExtractToDataclassActionData(true, List.of(0, 1, 2), "my_params",
                 "MyParams");
         triggerAction();
         myFixture.checkResultByFile(getExpectedFileName());
