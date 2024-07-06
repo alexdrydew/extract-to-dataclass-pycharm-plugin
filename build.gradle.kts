@@ -19,8 +19,8 @@ intellij {
 sourceSets {
     main {}
     test {
-        java.srcDir("testSrc")
-        resources.srcDir("testData")
+        java.srcDirs("testSrc")
+        resources.srcDirs("testData")
     }
 }
 
