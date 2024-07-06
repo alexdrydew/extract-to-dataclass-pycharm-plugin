@@ -1,5 +1,6 @@
 package com.extractToDataclass;
 
+import com.intellij.codeInsight.hint.HintManager;
 import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -42,6 +43,8 @@ public class ExtractToDataclassAction extends AnAction {
             WriteCommandAction.runWriteCommandAction(function.getProject(), "Extract Parameters To Dataclass", null,
                     () -> helper.extractParametersToDataclass(targetFile, function,
                             actionData.selectedParameterIndices()));
+        } else {
+            HintManager.getInstance().showErrorHint(event.getData(CommonDataKeys.EDITOR), "No function selected");
         }
     }
 
@@ -77,11 +80,5 @@ public class ExtractToDataclassAction extends AnAction {
             return (PyFunction) element;
         }
         return null;
-    }
-
-    @Override
-    public void update(AnActionEvent event) {
-        PyFunction function = getTargetFunction(event);
-        event.getPresentation().setEnabled(function != null);
     }
 }
