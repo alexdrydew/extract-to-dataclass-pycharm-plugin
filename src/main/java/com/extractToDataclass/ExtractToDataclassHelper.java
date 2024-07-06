@@ -195,25 +195,6 @@ public class ExtractToDataclassHelper {
         return hasFromImport(targetFile, "dataclasses", DATACLASS_IDENTIFIER);
     }
 
-    private static @NotNull String buildParamsDataclassSource(@NotNull PyParameter[] params, @NotNull String dataclassName, @NotNull List<Integer> parametersIndicesToExtract) {
-        StringBuilder paramsDataclassStringBuilder = new StringBuilder();
-        paramsDataclassStringBuilder.append("@dataclass\n");
-        paramsDataclassStringBuilder.append("class %s:\n".formatted(dataclassName));
-        for (Integer index : parametersIndicesToExtract) {
-            PyNamedParameter namedParam = params[index].getAsNamed();
-            paramsDataclassStringBuilder.append("    ");
-            paramsDataclassStringBuilder.append(namedParam.getName());
-            PyAnnotation annotation = namedParam.getAnnotation();
-            if (annotation != null) {
-                paramsDataclassStringBuilder.append(annotation.getText());
-            } else {
-                paramsDataclassStringBuilder.append(": Any");
-            }
-            paramsDataclassStringBuilder.append("\n");
-        }
-        return paramsDataclassStringBuilder.toString();
-    }
-
     private void removeParameters(@NotNull PyFunction function, @NotNull List<Integer> parametersIndicesToRemove) {
         PyParameter[] params = function.getParameterList().getParameters();
         for (Integer index : parametersIndicesToRemove) {
