@@ -8,7 +8,7 @@ Before refactoring:
 
 ```python
 def process_user(name: str, age: int, email: str, is_active: bool = True):
-    priint(f"Processing user: {name}, {age}, {email}, {is_active}")
+    print(f"Processing user: {name}, {age}, {email}, {is_active}")
 ```
 
 After refactoring:
