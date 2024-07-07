@@ -1,5 +1,9 @@
 # Extract to Dataclass
 
+[![PyCharm Plugin](https://img.shields.io/jetbrains/plugin/v/24800-extract-to-dataclass.svg)](https://plugins.jetbrains.com/plugin/24800-extract-to-dataclass)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/alexdrydew/ExtractToDataclass/check.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A PyCharm plugin that enables refactoring of function arguments into separate dataclasses.
 
 ## Example
