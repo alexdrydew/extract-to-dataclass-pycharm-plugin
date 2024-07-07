@@ -6,36 +6,15 @@
 
 A PyCharm plugin that enables refactoring of function arguments into separate dataclasses.
 
-## Example
-
-Before refactoring:
-
-```python
-def process_user(name: str, age: int, email: str, is_active: bool = True):
-    print(f"Processing user: {name}, {age}, {email}, {is_active}")
-```
-
-After refactoring:
-
-```python
-from dataclasses import dataclass
-
-@dataclass
-class UserData:
-    name: str
-    age: int
-    email: str
-    is_active: bool = True
-
-def process_user(user_data: UserData):
-    print(f"Processing user: {user_data.name}, {user_data.age}, {user_data.email}, {user_data.is_active}")
-```
-
 ## Overview
 
 This plugin introduces an "Extract to Dataclass" refactoring action, allowing you to quickly organize function
 parameters into structured dataclasses. It's designed to enhance your code's readability and maintainability in Python
 projects.
+
+## Example
+
+![Plugin Demo](docs/demo.gif)
 
 ## Key Features
 
