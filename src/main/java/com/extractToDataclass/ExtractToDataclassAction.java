@@ -76,9 +76,22 @@ public class ExtractToDataclassAction extends AnAction {
 
     private @Nullable PyFunction getTargetFunction(@NotNull AnActionEvent event) {
         PsiElement element = event.getData(CommonDataKeys.PSI_ELEMENT);
-        if (element instanceof PyFunction) {
-            return (PyFunction) element;
+        if (element == null) {
+            return null;
         }
+
+        if (element instanceof PyFunction pyFunction) {
+            return pyFunction;
+        }
+
+        // Traverse up the PSI tree to find the nearest PyFunction parent
+        while (element != null) {
+            element = element.getParent();
+            if (element instanceof PyFunction pyFunction) {
+                return pyFunction;
+            }
+        }
+
         return null;
     }
 }
