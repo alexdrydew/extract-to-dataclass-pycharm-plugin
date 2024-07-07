@@ -36,7 +36,7 @@ The plugin requires PyCharm 2023.1 or later.
 
 1. Select function that requires refactoring
 2. Access via right-click `Refactor` menu
-3. Select `Extract to Dataclass`
+3. Select `Extract arguments to dataclass`
 4. Choose parameters to extract
 5. Specify dataclass and parameter names (or use defaults)
 6. Confirm to perform the refactoring
