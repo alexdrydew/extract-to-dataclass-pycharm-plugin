@@ -7,6 +7,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.python.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -38,14 +39,39 @@ public class ExtractToDataclassAction extends AnAction {
             }
 
             PyFile targetFile = (PyFile) function.getContainingFile();
-            ExtractToDataclassHelper helper = new ExtractToDataclassHelper(actionData.parameterName(),
-                    actionData.className());
             WriteCommandAction.runWriteCommandAction(function.getProject(), "Extract Parameters To Dataclass", null,
-                    () -> helper.extractParametersToDataclass(targetFile, function,
-                            actionData.selectedParameterIndices()));
+                    () -> extractParametersToDataclass(
+                            event.getData(CommonDataKeys.EDITOR),
+                            targetFile,
+                            function,
+                            actionData
+                    ));
         } else {
-            HintManager.getInstance().showErrorHint(event.getData(CommonDataKeys.EDITOR), "No function selected");
+            showErrorHint(event.getData(CommonDataKeys.EDITOR), "No function selected");
         }
+    }
+
+    private void extractParametersToDataclass(
+            Editor editor,
+            PyFile targetFile,
+            PyFunction function,
+            ExtractToDataclassActionData actionData) {
+        ExtractToDataclassHelper helper = new ExtractToDataclassHelper(actionData.parameterName(),
+                actionData.className());
+        ExtractToDataclassHelper.ExtractionResult result = helper.extractParametersToDataclass(targetFile, function, actionData.selectedParameterIndices());
+        if (result == ExtractToDataclassHelper.ExtractionResult.SUCCESS) {
+            return;
+        }
+
+        if (result == ExtractToDataclassHelper.ExtractionResult.ERROR_OVERLOADED_FUNCTION) {
+            showErrorHint(editor, "Overloaded functions are not supported");
+        } else {
+            throw new IllegalStateException("Action failed due to: " + result);
+        }
+    }
+
+    private void showErrorHint(Editor editor, String message) {
+        HintManager.getInstance().showErrorHint(editor, message);
     }
 
     private @Nullable ExtractToDataclassActionData askForActionData(PyFunction function) {

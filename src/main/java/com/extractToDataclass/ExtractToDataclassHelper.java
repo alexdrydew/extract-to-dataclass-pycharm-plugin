@@ -23,6 +23,11 @@ import java.util.stream.Collectors;
 
 
 public class ExtractToDataclassHelper {
+    public enum ExtractionResult {
+        SUCCESS,
+        ERROR_OVERLOADED_FUNCTION,
+        ERROR_INVALID_PARAMETER_INDICES
+    }
 
     String parameterName;
     String dataclassNameSuffix;
@@ -33,7 +38,14 @@ public class ExtractToDataclassHelper {
         this.dataclassNameSuffix = dataclassNameSuffix;
     }
 
-    public void extractParametersToDataclass(@NotNull PyFile targetFile, @NotNull PyFunction function, @NotNull List<Integer> parametersIndicesToExtract) {
+    public ExtractionResult extractParametersToDataclass(@NotNull PyFile targetFile, @NotNull PyFunction function, @NotNull List<Integer> parametersIndicesToExtract) {
+        if (isOverloadedFunction(function)) {
+            return ExtractionResult.ERROR_OVERLOADED_FUNCTION;
+        }
+        if (!areParameterIndicesValid(function, parametersIndicesToExtract)) {
+            return ExtractionResult.ERROR_INVALID_PARAMETER_INDICES;
+        }
+
         PyParameterList params = function.getParameterList();
 
         importDataclassDecoratorIfNeeded(targetFile);
@@ -49,6 +61,21 @@ public class ExtractToDataclassHelper {
         updateLocalParametersUsage(function, paramName, parametersIndicesToExtract);
         updateFunctionCalls(function, className, paramName, parametersIndicesToExtract);
         removeParameters(function, parametersIndicesToExtract);
+        return ExtractionResult.SUCCESS;
+    }
+
+    private boolean isOverloadedFunction(@NotNull PyFunction function) {
+        PyFile containingFile = (PyFile) function.getContainingFile();
+        Collection<PyFunction> overloads = containingFile.getTopLevelFunctions().stream()
+                .filter(f -> f.getName().equals(function.getName()))
+                .toList();
+        return overloads.size() > 1;
+    }
+
+    private boolean areParameterIndicesValid(@NotNull PyFunction function, @NotNull List<Integer> parametersIndicesToExtract) {
+        PyParameterList parameterList = function.getParameterList();
+        PyParameter[] parameters = parameterList.getParameters();
+        return parametersIndicesToExtract.stream().allMatch(index -> index >= 0 && index < parameters.length);
     }
 
     private void importAnyIfNeeded(@NotNull PyFile targetFile, @NotNull PyFunction function, @NotNull List<Integer> parametersIndicesToExtract) {
@@ -269,7 +296,6 @@ public class ExtractToDataclassHelper {
         PyFunction targetFunction = getCalledFunction(call);
         PyFile targetFunctionFile = (PyFile) targetFunction.getContainingFile();
         List<PyCallExpression.PyArgumentsMapping> argumentsMappings = call.multiMapArguments(PyResolveContext.defaultContext(TypeEvalContext.userInitiated(targetFunction.getProject(), targetFunction.getContainingFile())));
-        // TODO: handle overloaded functions?
         if (argumentsMappings.size() == 1) {
             PyFile callFile = (PyFile) call.getContainingFile();
             if (!callFile.equals(targetFunctionFile)) {
