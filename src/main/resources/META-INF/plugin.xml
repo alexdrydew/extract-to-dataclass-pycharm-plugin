@@ -2,7 +2,7 @@
     <id>com.extractToDataclass</id>
     <name>ExtractToDataclass</name>
     <version>1.0</version>
-    <vendor email="alexdrydew@gmail.com">alexdrydew</vendor>
+    <vendor email="aleksey.suhorosov@gmail.com">alexdrydew</vendor>
     <description>A plugin to extract function arguments to a dataclass</description>
 
 
